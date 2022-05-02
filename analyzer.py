@@ -3,6 +3,8 @@ import textrazor
 from google.cloud import language_v1
 
 
+
+
 class TextRazorAnalyzer:
     def __init__(self, api_key):
         """ Initializes TextRazorAnalyzer
@@ -75,6 +77,7 @@ class GoogleNLPAnalyzer:
             )
         return response
     
+
     def load_text_from_url(self, url):
         """ Loads text from a URL
 

@@ -1,4 +1,5 @@
 import base64
+import os
 import json
 import pickle
 import uuid
@@ -21,20 +22,21 @@ import requests
 en_wiki_wiki = wikipediaapi.Wikipedia('en')
 it_wiki_wiki = wikipediaapi.Wikipedia('it')
 
+
 google_types = {
-    0: "UNKNOWN",
-    1: "PERSON",
-    2: "LOCATION",
-    3: "ORGANIZATION",
-    4: "EVENT",
-    5: "WORK_OF_ART",
-    6: "CONSUMER_GOOD",
-    7: "OTHER",
-    9: "PHONE_NUMBER",
-    10: "ADDRESS",
-    11: "DATE",
-    12: "NUMBER",
-    13: "PRICE",
+    0 :"UNKNOWN",
+    1 :"PERSON",
+    2 :"LOCATION",
+    3 :"ORGANIZATION",
+    4 :"EVENT",
+    5 :"WORK_OF_ART",
+    6 :"CONSUMER_GOOD",
+    7 :"OTHER",
+    9 :"PHONE_NUMBER",
+    10 :"ADDRESS",
+    11 :"DATE",
+    12 :"NUMBER",
+    13 :"PRICE",
 }
 
 
@@ -54,7 +56,7 @@ def get_summary_link(title, lang):
             wiki_wiki = it_wiki_wiki
         else:
             wiki_wiki = en_wiki_wiki
-
+        
         page = wiki_wiki.page(title)
 
         summary = page.summary
@@ -99,13 +101,13 @@ def convert_schema(schema_type, data, scrape_all, lang):
     result = []
     for d in data:
         item = {}
-
+        
         item["@context"] = "http://schema.org"
         item["@type"] = "Thing"
         item["name"] = d["name"]
         if not scrape_all:
             item["description"] = get_summary_link(d["name"], lang)[0]
-
+        
         if "Wikidata Id" in d and "Wikipedia Link" in d:
             item["SameAs"] = [
                 d.pop("Wikipedia Link", None),
@@ -143,6 +145,7 @@ def extract_tags_text(url):
     h2_list = """\n\n""".join([" " + str(tag.text) for tag in soup.select("h2")])
     h3_list = """\n\n""".join([" " + str(tag.text) for tag in soup.select("h3")])
     return title, desc, h1_list, h2_list, h3_list
+
 
 
 def is_url(text):
@@ -281,7 +284,7 @@ def get_metadata(html, url):
 
 
 def get_df_text_razor(text_razor_key, text_input, extract_categories_topics, is_url, scrape_all):
-    # x = True
+    #x = True
     """ Get data using TextRazor API.
 
     Args:
@@ -305,18 +308,18 @@ def get_df_text_razor(text_razor_key, text_input, extract_categories_topics, is_
     except TextRazorAnalysisException:
         st.warning("Please make sure that the API Key is correct")
         st.stop()
-
+    
     output = []
     known_entities = []
     for i, entity in enumerate(response.entities()):
         progress_val += 1
-        if entity.id not in known_entities and \
-                entity.confidence_score > 0 and \
-                entity.relevance_score > 0 and \
-                not str(entity.id).isnumeric() and not is_time(entity.id):
+        if entity.id not in known_entities and\
+        entity.confidence_score > 0 and\
+        entity.relevance_score > 0 and\
+        not str(entity.id).isnumeric() and not is_time(entity.id):
             summary = ""
             en_link = ""
-            if scrape_all:  # or x:
+            if scrape_all:# or x:
                 summary, en_link, it_link = get_summary_link(entity.id, response.language)
             if entity.dbpedia_types:
                 entity_type = entity.dbpedia_types[0]
@@ -330,7 +333,7 @@ def get_df_text_razor(text_razor_key, text_input, extract_categories_topics, is_
                 "description": summary,
                 "Wikidata Id": entity.wikidata_id,
                 "Confidence Score": entity.confidence_score,
-                # "Confidence Score":f"{(entity.confidence_score/max(entity.confidence_score))* 100:.2f}%",
+                #"Confidence Score":f"{(entity.confidence_score/max(entity.confidence_score))* 100:.2f}%",
                 "Relevance Score": f"{entity.relevance_score * 100:.2f}%",
                 "Wikipedia Link": entity.wikipedia_link,
                 "English Wikipedia Link": en_link,
@@ -340,7 +343,7 @@ def get_df_text_razor(text_razor_key, text_input, extract_categories_topics, is_
                 del data["English Wikipedia Link"]
             output.append(data)
             known_entities.append(entity.id)
-        progress_bar.progress((progress_val) / len(response.entities()))
+        progress_bar.progress((progress_val)/len(response.entities()))
     topics_output = []
     categories_output = []
     if extract_categories_topics:
@@ -360,19 +363,17 @@ def get_df_text_razor(text_razor_key, text_input, extract_categories_topics, is_
             )
     return output, response, topics_output, categories_output
 
-
-# ----------------------------Convert Confidence score value into percentage----------------------
+#----------------------------Convert Confidence score value into percentage----------------------
 def conf(df, col):
     if col in df:
-        df[col] = (df[[col]].div(max(df[col]), axis=1) * 100).round(2).astype(str) + '%'
-
-
-# -------------------------------------end----------------------------------------------
+        df[col] = (df[[col]].div(max(df[col]), axis=1)*100).round(2).astype(str) + '%'
+ 
+ #-------------------------------------end----------------------------------------------
 
 
 def get_df_google_nlp(key, text_input, is_url, scrape_all):
-    # x = True
-    # scrape_all= True
+    #x = True
+   # scrape_all= True
     """ Get data using Google Natural Language API.
 
     Args:
@@ -397,17 +398,17 @@ def get_df_google_nlp(key, text_input, is_url, scrape_all):
         print(e)
         st.warning("Please make sure that the API Key is correct")
         st.stop()
-
+    
     output = []
     known_entities = []
     for i, entity in enumerate(response.entities):
         progress_val += 1
-        if entity.name not in known_entities and \
-                not str(entity.name).isnumeric() and not is_time(entity.name):
+        if entity.name not in known_entities and\
+        not str(entity.name).isnumeric() and not is_time(entity.name):
             summary = ""
             en_link = ""
             it_link = ""
-            if scrape_all:  # or x:
+            if scrape_all:#or x:
                 summary, en_link, it_link = get_summary_link(entity.name, response.language)
                 lang = response.language
 
@@ -430,7 +431,7 @@ def get_df_google_nlp(key, text_input, is_url, scrape_all):
                 "Italian Wikipedia Link": it_link,
                 "English Wikipedia Link": en_link,
             }
-            # print('\nLanguage\n', response.language)
+            #print('\nLanguage\n', response.language)
             if not scrape_all:
                 del data["description"]
                 del data["English Wikipedia Link"]
@@ -441,9 +442,8 @@ def get_df_google_nlp(key, text_input, is_url, scrape_all):
             #     del data["Italian Wikipedia Link"]
             output.append(data)
             known_entities.append(entity.name)
-        progress_bar.progress((progress_val) / len(response.entities))
+        progress_bar.progress((progress_val)/len(response.entities))
     return output, response
-
 
 def write_meta(text_input, meta_tags_only, is_url):
     """ Concatenate meta tags with input text.
@@ -476,62 +476,3 @@ def write_meta(text_input, meta_tags_only, is_url):
         return text_input, is_url
     else:
         return text_input, False
-
-
-def word_frequency(df, text_input, language_option, texts=None):
-    from nltk.stem.snowball import SnowballStemmer
-
-    if language_option == 'eng':
-
-        stemmer = SnowballStemmer(language='english')
-    else:
-
-        stemmer = SnowballStemmer(language='italian')
-
-    # stemmer = snowballstemmer.stemmer('english')
-    # if len(texts) >0 :
-    if texts == None:
-        # text_input = texts
-        text_input = text_input
-    else:
-        text_input = texts
-    tokens = text_input.split()
-    stem_words = []
-    for token in tokens:
-        stem_words.append(stemmer.stem(token))
-        # stem_words.append(stemmer.stemWords(token))
-
-    word_count = []
-    txt = text_input.lower()
-    print(df.columns)
-    for word in list(df['name']):
-        word = word.lower()
-        stem_word = stemmer.stem(word)
-        # stem_word = stemmer.stemWords(word)
-        count = txt.count(word)
-        if count == 0:
-            count = stem_words.count(stem_word)
-            word_count.append(count)
-            continue
-
-        word_count.append(count)
-    df = df.insert(loc=3, column='Frequency', value=np.array(word_count))
-    return df
-
-
-# ---------------------google api frequency count-----------------
-def word_frequency1(df, response2):
-    import math
-    word_count = []
-
-    for word in list(df['name']):
-        word = word.lower()
-
-        count = response2.count(word) / 2
-        count = math.ceil(count)
-        print('inside funtion response1\n')
-        word_count.append(count)
-
-    df = df.insert(loc=3, column='Frequency', value=np.array(word_count))
-    # df['Frequency2'] = df['Frequency2'].astype('int64')
-    return df

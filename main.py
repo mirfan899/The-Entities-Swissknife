@@ -47,8 +47,8 @@ hide_st_style = """
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
-if "en_nlp" not in st.session_state:
-    st.session_state.en_nlp = spacy.load("en_core_web_sm")
+# if "en_nlp" not in st.session_state:
+#     st.session_state.en_nlp = spacy.load("en_core_web_sm")
 
 # if "it_nlp" not in st.session_state:
 #     st.session_state.it_nlp = spacy.load("it_core_news_sm")
@@ -98,12 +98,11 @@ with st.form("my_form"):
     )
     input_type_selectbox = st.sidebar.selectbox(
         "Choose what you want to analyze",
-        ("URL", "Text", "URL vs URL")
+        ("URL", "Text")
     )
     
-    st.sidebar.info('##### Read this article to [learn more about how to use The Entities Swissknife](https://studiomakoto.it/digital-marketing/entity-seo-semantic-publishing/).')
     st.sidebar.info('##### Register on the [TextRazor website](https://www.textrazor.com/) to obtain a free API keyword (🙌 500 calls/day 🙌) or activate the [NLP API](https://cloud.google.com/natural-language) inside your Google Cloud Console, and export the JSON authentication file.') 
-    st.sidebar.info('##### Knowledge Graph Entity ID is extracted only using the Google NLP API.')
+    st.sidebar.info('##### Knowledge Graph Entity ID is extracted only using the Google NLP API.') 
     st.sidebar.info('##### Categories and Topics - by [IPTC Media Topics](https://iptc.org/standards/media-topics/) - are avalaible only using the TextRazor API.') 
    
     # loti_path = load_lottifile('lotti/seo.json')
@@ -120,6 +119,7 @@ This app, devoted to ✍️[Semantic Publishing](https://en.wikipedia.org/wiki/S
 -   [Text Razor API](https://www.textrazor.com/) for Named-Entity Recognition ([NER](https://en.wikipedia.org/wiki/Named-entity_recognition)) and Linking ([NEL](https://en.wikipedia.org/wiki/Entity_linking));
 -   [Google NLP API](https://cloud.google.com/natural-language) for NER and NEL;
 -   Wikipedia API for scraping entities description;
+-   [SpaCy for Streamlit](https://spacy.io/universe/project/spacy-streamlit) for Part-of-Speech Recognition
 -   For everything else, the beauty and power of 🐍Python🐍 and Steamlit.
             
             """
@@ -132,7 +132,7 @@ This app, devoted to ✍️[Semantic Publishing](https://en.wikipedia.org/wiki/S
 The Entities Swissknife (TES) is a 100% 🐍Python🐍 app for Semantic publishing, i.e., publishing information on the web as documents accompanied by semantic markup (using the [schema.org](https://schema.org) vocabulary in JSON-LD format). Semantic publication provides a way for machines to understand the structure and meaning of the published information, making information search and data integration more efficient.
 Semantic publishing relies on Structured Data adoption and Entity Linking (Wikification). Named entities are then injected into the JSON-LD markup to make the Content Topics explicit and 🥰Search engines friendly🥰: declare the main topic with the '[about](https://schema.org/about)' property and the secondary topics with the '[mentions](https://schema.org/mentions)' property).
 The 'about' property should refer to 1-2 entities/topics at most, and these entities should be present in your H1 title. The 'mentions' properties should be no more than 3-5 depending on the article's length; as a general rule, an entities/topics should be explicitly mentioned in your schema markup if there is at least one paragraph dedicated to them (and they are possibly present in the relative headline).
-The table with the "Top Entities by Frequency" takes into account for the Frequency count also the normalized entities and not only the exact word with which the entities are present in the text.
+The table with the "Top entities by Frequency" takes into account for the Frequency count also the normalized entities and not only the exact word with which the entities are present in the text.
             
             """
         )
@@ -145,6 +145,7 @@ The table with the "Top Entities by Frequency" takes into account for the Freque
 -   Analyze your SERP competitor’s main topics to discover possible topical gaps in your content;
 -   Generate the JSON-LD markup (and inject it into your page schema) to explicit which topics your page is about to search engines. Declare your main topic with the 'about' property. Use the 'mentions' property to declare your secondary topics. This is helpful for disambiguation purposes too;
 -   Analyze short texts such as a copy for an ad or a bio/description for an About-page (i.e., the [Entity Home](https://kalicube.com/faq/brand-serps/entity-home-in-seo-explainer/)).
+-   Fine-tune the text until Google correctly recognizes the relevant entities and gives them desired salience. Use the SpaCy Part-of-Speech module to check how algorithms understand dependencies. Simplify the structure of the sentence if it is machines unfriendly.
            """
         )
 
@@ -189,22 +190,10 @@ The table with the "Top Entities by Frequency" takes into account for the Freque
         st.session_state.last_field_type = input_type_selectbox
         meta_tags_only = False
         text_input = st.text_area('Please enter a text', placeholder='Posts involving Semantic SEO at Google include structured data, schema, and knowledge graphs, with SERPs that answer questions and rank entities - Bill Slawsky.')
-    elif input_type_selectbox == "URL vs URL":
-        st.session_state.last_field_type = input_type_selectbox
-
-        url1 = st.text_input(label='Enter first URL')
-        url2 = st.text_input(label='Enter second URL')
-
-        # Every form must have a submit button.
-        # submitted = st.form_submit_button("Submit")
-        text_input = url1+url2
-        # if submitted:
-        #     st.write("First Url", url1, "Second Url", url2)
-
     is_url = utils.is_url(text_input)
    # print('is_uri from 192 line\n', is_url)
-    spacy_pos = st.checkbox('Process Part-of-Speech analysis with SpaCy')
-    # spacy_pos = False
+    # spacy_pos = st.checkbox('Process Part-of-Speech analysis with SpaCy')
+    spacy_pos = False
     scrape_all = st.checkbox("Scrape ALL the Entities descriptions from Wikipedia. This is a time-consuming task, so grab a coffee if you need all the descriptions in your CSV file. The descriptions of the Entities you select for your 'about' and 'mentions' schema properties will be scraped and present in the corresponding JSON-LD files")
     #rint('Scrape all', scrape_all)
     if api_selectbox == "TextRazor":
@@ -263,13 +252,58 @@ The table with the "Top Entities by Frequency" takes into account for the Freque
             st.session_state.lang = response.language
             language_option = response.language
            # print('langu form==>', response.language)
+#---------------------------------------------Frequency Counter------------------
+#
+# @st.cache
+def word_frequency(df, text_input, language_option, texts= texts):
 
+        from nltk.stem.snowball import SnowballStemmer
+
+        if language_option == 'eng':
+
+            stemmer = SnowballStemmer(language='english')
+        else:
+
+            stemmer = SnowballStemmer(language='italian')
+
+        #stemmer = snowballstemmer.stemmer('english')
+        #if len(texts) >0 :
+        if texts==None:
+            #text_input = texts
+            text_input= text_input
+        else:
+            text_input=texts
+        tokens = text_input.split()
+        stem_words = []
+        for token in tokens:
+            stem_words.append(stemmer.stem(token))
+            #stem_words.append(stemmer.stemWords(token))
+           
+        word_count = []
+        txt = text_input.lower()
+        for word in list(df['name']):
+            word = word.lower()
+            stem_word = stemmer.stem(word)
+            #stem_word = stemmer.stemWords(word)
+            count = txt.count(word)
+            if count == 0 :
+                
+                count = stem_words.count(stem_word)
+                word_count.append(count)
+                continue
+           
+
+            word_count.append(count)
+        df = df.insert(loc=3, column='Frequency', value=np.array(word_count)) 
+        return df
+#-------------------------------------------end----------------------------------------------
 # #----------------------------Convert Confidence score value into percentage----------------------
 # def conf(col):
 #     if col in df:
 #         df[col] = (df[[col]].div(max(df[col]), axis=1)*100).round(2).astype(str) + '%'
  
 #  #-------------------------------------end----------------------------------------------
+
 
 
 if 'submit' in st.session_state and ("text_razor" in st.session_state and st.session_state.text_razor == True):
@@ -286,18 +320,15 @@ if 'submit' in st.session_state and ("text_razor" in st.session_state and st.ses
         selected_about_names = st.multiselect('Select About Entities:', df.name)
         selected_mention_names = st.multiselect('Select Mentions Entities:', df.name)
         #--------------Frequency count--------------
-        #if not url:
-        utils.word_frequency(df, text_input, language_option, texts) #-----------------------Function call for textrazor-------------
-        st.write('### Entities', df)
-        df = df.sort_values('Frequency', ascending=False)
-        st.write('### Top 10 Entities by Frequency', df[['name', 'Frequency']].head(10))
+    #if not url:
+    word_frequency(df, text_input, language_option, texts) #-----------------------Function call for textrazor-------------
     #print(is_url)
     #print(text_input)
     utils.conf(df, "Confidence Score")
-    # st.write('### Entities', df)
+    st.write('### Entities', df)
     #st.write('#### Entity table Dimension', df.shape)
-    # df1 = df.sort_values('Frequency', ascending=False)
-    # st.write('### Top 10 Entities by Frequency', df1[['name', 'Frequency']].head(10))
+    df1 = df.sort_values('Frequency', ascending=False)
+    st.write('### Top 10 Entities by Frequency', df1[['name', 'Frequency']].head(10))
     #st.write(response1)
 
     c, t = st.columns(2)
@@ -339,7 +370,23 @@ if 'submit' in st.session_state and ("text_razor" in st.session_state and st.ses
             #print('textrazor-ita lang\n', st.session_state.lang)
             doc = st.session_state.it_nlp(st.session_state.text)
         visualize_parser(doc)
-
+#---------------------google api frequency count-----------------
+# def word_frequency1(df, response2):
+    
+#         import math
+#         word_count = []
+        
+#         for word in list(df['name']):
+#             word = word.lower()
+           
+#             count = response2.count(word)/2
+#             count= math.ceil(count)
+#             print('inside funtion response1\n')
+#             word_count.append(count)
+            
+#         df = df.insert(loc=3, column='Frequency', value=np.array(word_count))
+#        # df['Frequency2'] = df['Frequency2'].astype('int64')
+#         return df
 if 'submit' in st.session_state and ("google_api" in st.session_state and st.session_state.google_api == True):
     text_input, is_url = utils.write_meta(text_input, meta_tags_only, is_url)
     # st.write('text_input 380|', text_input)
