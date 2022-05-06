@@ -3,8 +3,6 @@ import textrazor
 from google.cloud import language_v1
 
 
-
-
 class TextRazorAnalyzer:
     def __init__(self, api_key):
         """ Initializes TextRazorAnalyzer
@@ -60,7 +58,7 @@ class GoogleNLPAnalyzer:
             if not html:
                 return None
             document = language_v1.Document(
-                content=html, 
+                content=html,
                 type_=language_v1.Document.Type.HTML
             )
             response = self.client.analyze_entities(
@@ -68,7 +66,7 @@ class GoogleNLPAnalyzer:
             )
         else:
             document = language_v1.Document(
-                content=text, 
+                content=text,
                 type_=language_v1.Document.Type.PLAIN_TEXT
             )
 
@@ -76,7 +74,6 @@ class GoogleNLPAnalyzer:
                 document=document
             )
         return response
-    
 
     def load_text_from_url(self, url):
         """ Loads text from a URL
@@ -92,7 +89,7 @@ class GoogleNLPAnalyzer:
         results = []
 
         try:
-            
+
             headers = {'User-Agent': 'My User Agent 1.0'}
             # print("Extracting text from: {}".format(url))
             response = requests.get(url, headers=headers, timeout=timeout)
@@ -102,7 +99,7 @@ class GoogleNLPAnalyzer:
 
             if status == 200 and len(text) > 0:
                 return text
-            
+
             return None
         except Exception as e:
             print(e)
