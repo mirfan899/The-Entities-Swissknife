@@ -74,7 +74,7 @@ st.markdown(
 )
 
 st.markdown(
-    "###### Made in [![this is an image link](https://i.imgur.com/iIOA6kU.png)](https://www.streamlit.io/)&nbsp, with ❤️ by [@max_geraci](https://studiomakoto.it/makoto_member/massimiliano-geraci/) &nbsp | &nbsp [![Twitter Follow](https://img.shields.io/twitter/follow/max_geraci?style=social)](https://twitter.com/max_geraci) &nbsp | &nbsp [![this is an image link](https://i.imgur.com/thJhzOO.png)](https://www.buymeacoffee.com/MaxG.SEO)"
+    "###### Made in [![this is an image link](https://i.imgur.com/iIOA6kU.png)](https://www.streamlit.io/)&nbsp, with ❤️ by [@max_geraci](https://studiomakoto.it/makoto_member/massimiliano-geraci/) &nbsp | &nbsp [![Twitter Follow](https://img.shields.io/twitter/follow/max_geraci?style=social)](https://twitter.com/maxgeraci1) &nbsp | &nbsp [![this is an image link](https://i.imgur.com/thJhzOO.png)](https://www.buymeacoffee.com/MaxG.SEO)"
 )
 
 
