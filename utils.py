@@ -463,11 +463,9 @@ def get_df_url2url_razor(text_razor_key, text_input, are_urls, scrape_all=False)
     return output1, output2, known_entities1, known_entities2, response1.language
 
 
-# ----------------------------Convert Confidence score value into percentage----------------------
 def conf(df, col):
     if col in df:
         df[col] = (df[[col]].div(max(df[col]), axis=1) * 100).round(2).astype(str) + '%'
-# -------------------------------------end----------------------------------------------
 
 
 def get_df_google_nlp(key, text_input, is_url, scrape_all):
@@ -530,15 +528,10 @@ def get_df_google_nlp(key, text_input, is_url, scrape_all):
                 "Italian Wikipedia Link": it_link,
                 "English Wikipedia Link": en_link,
             }
-            # print('\nLanguage\n', response.language)
             if not scrape_all:
                 del data["description"]
                 del data["English Wikipedia Link"]
                 del data["Italian Wikipedia Link"]
-            # if not scrape_all and lang == "it":
-            #     del data["English Wikipedia Link"]
-            # if  lang == "en":
-            #     del data["Italian Wikipedia Link"]
             output.append(data)
             known_entities.append(entity.name)
         progress_bar.progress((progress_val) / len(response.entities))
@@ -607,7 +600,6 @@ def get_df_url2url_google(key, text_input, are_urls, scrape_all):
                 "Italian Wikipedia Link": it_link,
                 "English Wikipedia Link": en_link,
             }
-            # print('\nLanguage\n', response.language)
             if not scrape_all:
                 del data["description"]
                 del data["English Wikipedia Link"]
@@ -645,7 +637,6 @@ def get_df_url2url_google(key, text_input, are_urls, scrape_all):
                 "Italian Wikipedia Link": it_link,
                 "English Wikipedia Link": en_link,
             }
-            # print('\nLanguage\n', response.language)
             if not scrape_all:
                 del data["description"]
                 del data["English Wikipedia Link"]
@@ -697,10 +688,7 @@ def word_frequency(df, text_input, language_option, texts=None):
     else:
         stemmer = SnowballStemmer(language='italian')
 
-    # stemmer = snowballstemmer.stemmer('english')
-    # if len(texts) >0 :
     if texts == None:
-        # text_input = texts
         text_input = text_input
     else:
         text_input = texts
@@ -708,7 +696,6 @@ def word_frequency(df, text_input, language_option, texts=None):
     stem_words = []
     for token in tokens:
         stem_words.append(stemmer.stem(token))
-        # stem_words.append(stemmer.stemWords(token))
 
     word_count = []
     txt = text_input.lower()
@@ -727,7 +714,6 @@ def word_frequency(df, text_input, language_option, texts=None):
     return df
 
 
-# ---------------------google api frequency count-----------------
 def word_frequency_google(df, response2):
     word_count = []
 
@@ -739,5 +725,4 @@ def word_frequency_google(df, response2):
         word_count.append(count)
 
     df = df.insert(loc=3, column='Frequency', value=np.array(word_count))
-    # df['Frequency2'] = df['Frequency2'].astype('int64')
     return df
