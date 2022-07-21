@@ -66,11 +66,6 @@ with st.form("my_form"):
 
     st.sidebar.info(
         '##### Read this article to [learn more about how to use The Entities Swissknife](https://studiomakoto.it/digital-marketing/entity-seo-semantic-publishing/).')
-    st.sidebar.info(
-        '##### Register on the [TextRazor website](https://www.textrazor.com/) to obtain a free API keyword (🙌 500 calls/day 🙌)')
-    st.sidebar.info('##### Knowledge Graph Entity ID is extracted only using the Google NLP API.')
-    st.sidebar.info(
-        '##### Categories and Topics - by [IPTC Media Topics](https://iptc.org/standards/media-topics/) - are avalaible only using the TextRazor API.')
 
     with st.expander("ℹ️ - About this app "):
         st.markdown(
