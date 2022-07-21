@@ -1,14 +1,7 @@
 ### Install packages.
-Create virtualenv first and then install poetry.
-
-Install poetry
+Run following command to install required packages:
 ```shell
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-```
-Now install the packages.
-
-```shell
-poetry install poetry.lock
+pip install -r requirements.txt
 ```
 
 ### Spacy Models

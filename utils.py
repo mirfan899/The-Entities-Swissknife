@@ -1,13 +1,14 @@
 import base64
 import json
+import os
 import pickle
 import uuid
 import re
 import math
+from collections import Counter
 import numpy as np
 import simplejson
 import unidecode
-
 import wikipediaapi
 from textrazor import TextRazorAnalysisException
 from analyzer import TextRazorAnalyzer, GoogleNLPAnalyzer
@@ -19,6 +20,9 @@ from dateutil import parser
 import streamlit as st
 import pandas as pd
 import requests
+
+author_textrazor_token = os.getenv("TEXTRAZOR_TOKEN")
+author_serp_token = os.getenv("SERP_API")
 
 en_wiki_wiki = wikipediaapi.Wikipedia('en')
 it_wiki_wiki = wikipediaapi.Wikipedia('it')
@@ -38,6 +42,121 @@ google_types = {
     12: "NUMBER",
     13: "PRICE",
 }
+
+
+def load_lang_loc_file(filepath: str):
+    with open(filepath, 'r') as f:
+        data = json.load(f)
+    locs = data.keys()
+    arrs = data.values()
+    langs = []
+    for lang in arrs:
+        langs.extend(lang)
+    return langs, locs, data
+
+
+def get_serp_search_results(query, lan, loc, serp_key):
+    params = {
+        'api_key': serp_key,
+        'q': query,
+        'location': loc,
+        "num": "30"
+    }
+
+    # make the http GET request to Scale SERP
+    api_result = requests.get('https://api.scaleserp.com/search', params).json()
+
+    if api_result["request_info"]["success"]:
+        urls = []
+        descriptions = []
+        ranking_positions = []
+        titles = []
+        items = api_result["organic_results"]
+        for item in items:
+            urls.append(item["link"])
+            if "snippet" in item:
+                descriptions.append(item["snippet"])
+            else:
+                descriptions.append("")
+            ranking_positions.append(item["position"])
+            titles.append(item["title"])
+        return pd.DataFrame(
+            {"urls": urls, "titles": titles, "ranking position": ranking_positions, "descriptions": descriptions})
+    else:
+        st.error("Issue with the keywords provided.")
+        st.stop()
+
+
+def get_entities_razor(text_razor_key, text_input, is_url, index=None):
+    """ Get data using TextRazor API.
+    Args:
+        text_razor_key (str): TextRazor API key.
+        text_input (str): Text to analyze.
+        is_url (bool): If True, text_input is a URL.
+        index: the index of the item
+    Returns:
+        output (list): List of dictionaries containing extracted data.
+    """
+    try:
+        analyzer = TextRazorAnalyzer(text_razor_key)
+        response = analyzer.analyze(text_input, is_url)
+    except TextRazorAnalysisException:
+        st.warning("Please make sure that the API Key is correct")
+        st.stop()
+
+    output = []
+    con = []
+    for i, entity in enumerate(response.entities()):
+        if not str(entity.id).isnumeric() and not is_time(entity.id):
+            output.append(entity.id)
+            con.append(entity.confidence_score)
+    if index:
+        return pd.DataFrame(
+            {"Entities {}".format(index): output, "Confidence Score url{}".format(index): con}).drop_duplicates(
+            ["Entities {}".format(index)]), output
+    else:
+        return pd.DataFrame({"Entities": output}).drop_duplicates(["Entities"]), output
+
+
+def get_entities(selected_rows=None, lang=None, key=None):
+    results = pd.DataFrame()
+    total = {}
+    con = {}
+    for i, row in enumerate(selected_rows):
+        url = row["urls"]
+        entities, t = get_entities_razor(author_textrazor_token, url, True, i + 1)
+        results = pd.concat([results, entities], axis=1)
+        total[url] = Counter(t)
+        con["Entities {}".format(i + 1)] = "Confidence Score url{}".format(i + 1)
+    return results, total, con
+
+
+def multi_conf(df, cols):
+    for col in cols:
+        df[col] = ((df[col] / df[col].sum()) * 100).round(2).fillna("0.0").astype(str) + '%'
+
+
+def style_zero(v, props=""):
+    return props if v == 0 else None
+
+
+def set_min_max(df):
+    """
+    set min and max values for the columns with red and green color
+    """
+    df = df.style.highlight_max(axis=1, color="#90EE90").highlight_min(axis=1, color="#CD5C5C")
+
+    return df.applymap(style_zero, props='color:black; background-color:white;')
+
+
+def load_lotti_file(filepath: str):
+    with open(filepath, 'r') as f:
+        return json.load(f)
+
+
+def local_css(file_name):
+    with open(file_name) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
 
 def get_summary_link(title, lang):

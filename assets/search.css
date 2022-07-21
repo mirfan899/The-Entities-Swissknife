@@ -1,0 +1,60 @@
+.stButton>button {
+    color: black;
+    content: "";
+    margin-top: 30px;
+    height: 3em;
+    width: 150px;
+    size: 100px;
+    background: #e1dfdf;
+}
+.css-165ax5l.edw49t13 {
+    margin-bottom: 1rem;
+    color: rgb(49, 51, 63);
+    border-collapse: separate;
+    border: 1px solid rgba(49, 51, 63, 0.1);
+    width: auto;
+    text-align: left;
+}
+table {
+    border-spacing: 0.5em;
+    margin: 0.5rem auto;
+    width: 450px;
+}
+
+tbody th {
+    display:none;
+    height:100px;
+}
+
+th.col_heading{
+    writing-mode: vertical-rl;
+    transform: rotateZ(180deg);
+    vertical-align: middle;
+}
+
+.blank {display:none}
+
+td {
+    margin: 0.5rem auto;
+    border-spacing: 1em;
+    border-radius:5px;
+}
+.css-znku1x {
+    font-family: "Source Sans Pro", sans-serif;
+    margin-bottom: -1rem;
+    padding-top: 45px;
+}
+.css-19n0993 {
+    width: 120px;
+    position: relative;
+    height: 100px;
+}
+
+.css-1y75v0b {
+    width: 238px;
+    position: relative;
+    display: flex;
+    flex: 1 1 0%;
+    flex-direction: column;
+    gap: 9.5rem;
+}
