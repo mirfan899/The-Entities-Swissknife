@@ -39,7 +39,7 @@ def app():
         )
     st.sidebar.info(
         '##### Read this article to [learn more about how to use The Entities Swissknife](https://studiomakoto.it/digital-marketing/entity-seo-semantic-publishing/).')
-
+    st.sidebar.info("#### Checkout the latest version of this app on [entitieschecker.com](https://entitieschecker.com/)")
     if not author_serp_token:
         serp_key = st.text_input('Please enter a valid SERP API Key (Required)')
     else:

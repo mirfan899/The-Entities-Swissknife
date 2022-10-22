@@ -43,7 +43,8 @@ def app():
         )
         st.sidebar.info(
             '##### Read this article to [learn more about how to use The Entities Swissknife](https://studiomakoto.it/digital-marketing/entity-seo-semantic-publishing/).')
-
+        st.sidebar.info(
+            "#### Checkout the latest version of this app on [entitieschecker.com](https://entitieschecker.com/)")
         if not author_textrazor_token:
             text_razor_key = st.text_input('Please enter a valid TextRazor API Key (Required)')
         else:
